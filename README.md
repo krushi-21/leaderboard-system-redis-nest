@@ -57,7 +57,7 @@ Redis Streams are used to handle database updates asynchronously. When a player'
 ### 1. Clone the Repository:
 
 ```bash
-git clone https://github.com/your-repo/leaderboard-system-redis-nest.git
+git clone https://github.com/krushi-21/leaderboard-system-redis-nest
 cd leaderboard-system-redis-nest
 ```
 
