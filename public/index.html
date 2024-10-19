@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game Leaderboard</title>
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      h1,
+      h2 {
+        color: #333;
+      }
+      #leaderboard {
+        list-style-type: none;
+        padding: 0;
+        height: 400px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+      }
+      #leaderboard li {
+        margin-bottom: 5px;
+        padding: 5px;
+        border-bottom: 1px solid #eee;
+      }
+      input,
+      button {
+        margin: 5px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Game Leaderboard</h1>
+
+    <h2>Create Player</h2>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="email" id="email" placeholder="Email" />
+    <button onclick="createPlayer()">Create Player</button>
+
+    <h2>Update Score</h2>
+    <input type="text" id="playerId" placeholder="Player ID" />
+    <input type="number" id="score" placeholder="Score" />
+    <button onclick="updateScore()">Update Score</button>
+
+    <h2>Latest 100 Players</h2>
+    <ul id="leaderboard"></ul>
+
+    <h2>Player Rank</h2>
+    <input type="text" id="rankPlayerId" placeholder="Player ID" />
+    <button onclick="getPlayerRank()">Get Player Rank</button>
+    <p id="playerRank"></p>
+
+    <script>
+      const socket = io('http://localhost:3000');
+
+      socket.on('connect', () => {
+        console.log('Connected to server');
+        getLatestPlayers();
+        getPreviousRecords();
+      });
+
+      socket.on('scoreUpdate', (data) => {
+        console.log('Score update:', data);
+        getLatestPlayers();
+      });
+
+      function createPlayer() {
+        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        socket.emit('createPlayer', { username, email });
+      }
+
+      socket.on('playerCreated', (player) => {
+        console.log('Player created:', player);
+        alert(`Player created with ID: ${player.id}`);
+      });
+
+      function updateScore() {
+        const playerId = document.getElementById('playerId').value;
+        const score = parseInt(document.getElementById('score').value);
+        socket.emit('updateScore', { playerId, score });
+      }
+
+      function getLatestPlayers() {
+        socket.emit('getLatestPlayers', { count: 100 });
+      }
+
+      function getPreviousRecords() {
+        socket.emit('getPreviousRecords');
+      }
+
+      socket.on('latestPlayers', (data) => {
+        const leaderboard = document.getElementById('leaderboard');
+        leaderboard.innerHTML = '';
+        data.players.forEach((player, index) => {
+          const li = document.createElement('li');
+          li.textContent = `${index + 1}. Player ${player.playerId}: ${player.score}`;
+          leaderboard.appendChild(li);
+        });
+      });
+
+      socket.on('previousRecords', (data) => {
+        console.log('Previous records:', data);
+      });
+
+      function getPlayerRank() {
+        const playerId = document.getElementById('rankPlayerId').value;
+        socket.emit('getPlayerRank', { playerId });
+      }
+
+      socket.on('playerRank', (data) => {
+        document.getElementById('playerRank').textContent =
+          `Player ${data.playerId} rank: ${data.rank}`;
+      });
+
+      socket.on('disconnect', () => {
+        console.log('Disconnected from server');
+      });
+    </script>
+  </body>
+</html>
